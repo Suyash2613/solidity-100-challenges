@@ -9,7 +9,7 @@ contract Lottery is VRFConsumerBaseV2 {
     address public owner;
     address payable[] public players;
     address public winner;
-    
+
     VRFCoordinatorV2Interface public COORDINATOR;
     uint64 public subscriptionId;
     bytes32 public keyHash;
@@ -63,8 +63,7 @@ contract Lottery is VRFConsumerBaseV2 {
     ) internal override {
         uint256 winnerIndex = randomWords[0] % players.length;
         winner = players[winnerIndex];
-
-        players[winnerIndex].transfer(address(this).balance);
+     players[winnerIndex].transfer(address(this).balance);
         emit Winneraddress(winner);
 
         delete players; //  Reset for next round
