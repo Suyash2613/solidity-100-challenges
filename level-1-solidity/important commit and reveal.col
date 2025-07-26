@@ -1,0 +1,15 @@
+commit() , Reveal() : I understand now: the hash is generated once when we commit,
+and later the contract re-generates the hash during reveal.
+It compares the stored commit-hash with the newly computed hash.
+First we submit only the blinded hash (made from bidAmount + secret).
+Then, during the reveal phase, we submit the actual bidAmount and secret;
+the contract recomputes the hash and compares it to the committed one.
+
+Only commit doesn't complete the process. Reveal is must.
+ Re-calculate hash
+ Match it with stored commit
+ Accept or reject the bidAmountupdate bid state
+
+ keccak256(abi.encodePacked(_amount, secret))
+  1) abi.encodePacked(...) = ye sab value ko ek sath pack karta hai -- byte array me convert karta hai.
+  2) keccak256(...) = ye SHA3 hasing algorithm hai(Ethereum me use hota hai) - ye us packed bytes array ka ek hash(fixed 32-byte output) generate karta hai.
