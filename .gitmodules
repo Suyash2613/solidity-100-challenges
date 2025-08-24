@@ -1,0 +1,9 @@
+[submodule "lottery-upgradeable/lib/forge-std"]
+	path = lottery-upgradeable/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "lottery-upgradeable/lib/openzeppelin-contracts-upgradeable"]
+	path = lottery-upgradeable/lib/openzeppelin-contracts-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+[submodule "lib/chainlink"]
+	path = lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink
