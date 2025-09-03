@@ -1,94 +1,119 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
- 
-  contract RockpaperScissors{
-    enum Move{rock, paper, scissors}
-    enum GameState{commitPhase, revealPhase, ended, waitingForplayers}
 
-    struct Players{
-    address addr;
-    bytes32 commitment; // player commitment move + seceret phrases
-    bool hascommitted;
-    bool hasReavealed;
-    Move move;
-  }
+contract RockPaperScissors {
+    enum Move { None, Rock, Paper, Scissors }
+    enum GameState { WaitingForPlayers, CommitPhase, RevealPhase, Finished }
 
-  Players[2] public players;
-  uint256 CommitDeadline;
-  uint256 RevealDeadline;
-  uint256 stake;
-  GameState public gamestate; // yha pe iska type GameState hi type ka hai  kyuki ye yhi hi value hi store krgea
- 
- mapping(address => bool) public JoinList;
- constructor(uint256 _stake, uint256 _commitDeadline, uint256 _revealDeadline){
-    stake = _stake;
-    CommitDeadline = block.timestamp + _commitDeadline;
-    RevealDeadline = block.timestamp + _revealdeadline;
-    gamestate = GameState.waitingForplayers;
-  }
- // join game only for two players of array players
+    event MoveRevealed(address indexed player, Move move);
+    event WinnerDecided(address winner);
 
- function joinGame() external payable{
+    address public winner;
+    uint256 public stake;
+    uint256 public commitDeadline;
+    uint256 public revealDeadline;
+    GameState public gameState;
 
-  require(msg.value == stake,"Insufficient amount of stake");
-  require(GameState.waitinfForplayers,"Can't join right now");
-
-// yha bht hi dimaak lga ke ye kr diya gya hai ki agr players[0] index wala blank hai to usme address daal do msg.sender ka .
-// aur agr players[1] ka ye address khali hai to dusra player ye daal do msg.sender k address , isi liye check kra ahi ki addrss(0) zero ho blank 
-
-   if(players[0].addr == address(0)) {
-    players[0].addr == msg.sender;
-    Joinlist[] = true;
-   } else if (players[1].addr == address(0)) {
-    players[1].addr == msg.sender;
-    gamestate = GameState.commitPhase;
-   }  else {
-    revert("Game full");
-   }
- } 
- 
- // Commit =hash(keccak256(abi.encodePacked(move, salt)))
-function commitMove(bytes _commitment) external {
-  require(gamestate == GameState.commitPhase,"Can't commit right now ");
-  require(block.timestamp <= CommitDeadline,"Can't commit right now");
-
-   for(uint i= 0, i<2, i++){
-    if(players[i].addr == msg.sender){
-      require(!players[i].hascommited,"Already commited");
-      players[i].commitment = _commitment;
-      players[i].hascommitted = true;
+    struct Player {
+        address addr;
+        bytes32 commitment; 
+        bool hasCommitted;
+        bool hasRevealed;
+        Move move;
     }
 
-   // jaise if ke and rhota tha ki automatic true ke liye check krta hai bool waise hi if ke liye hai ye flag
-    if(players[0].hascommited && players[1].hascommited){
-      gamestate = GameState.revealPhase ;
+    Player[2] public players;
+    mapping(address => bool) public joined;
+
+    constructor(uint256 _stake, uint256 _commitTime, uint256 _revealTime) {
+        stake = _stake;
+        commitDeadline = block.timestamp + _commitTime;
+        revealDeadline = commitDeadline + _revealTime;
+        gameState = GameState.WaitingForPlayers;
     }
-  }
 
-// function reveal krne ka bnayenge is baar ye real me contract me hi move dega apna aur sath me seceret phase dega aur match krenge ki paihle wale commitment se is baar ka hash same hai ya nhi
+    function joinGame() external payable {
+        require(msg.value == stake, "Wrong stake");
+        require(gameState == GameState.WaitingForPlayers, "Not join phase");
 
- function revealMove(Move _move, string memmory _phrase) external {
-  require(block.timestamp <= RevealDeadline,"Can't reveal right now");
-  require(gamestate == GameState.revealPhase,"Reveal phase is over");
-
-   for(uint i=0, i <2 , i++){
-    if (players[i].addr == msg.sender){
-
-  // bnde ne commit kr rkha ho aisa na ho ki commit hi nhi kra hai usne   
-      require(players[i].hascommitted,"Haven't commited");
-
-  // bnde ne paihle hi reveal na kr rkha ho 
-      require(!players[i].hasRevealed,"Already revealed");
-
- bytes32 checkHash = keccak256(abi.encodedPacked(_move, _phrase));
- require(players[i].commitment == checkHash,"Hash not matched with commitement Hash");
-   
-   players[i].move = _move;
-   players[i].hasRevealed = true;
-   
+        if (players[0].addr == address(0)) {
+            players[0].addr = msg.sender;
+            joined[msg.sender] = true;
+        } else if (players[1].addr == address(0)) {
+            players[1].addr = msg.sender;
+            joined[msg.sender] = true;
+            gameState = GameState.CommitPhase;
+        } else {
+            revert("Game full");
+        }
     }
-   }
- }
 
-  }
+    // Player submits commitment (off-chain precomputed hash)
+    function commitMove(bytes32 _commitment) external {
+        require(gameState == GameState.CommitPhase, "Not commit phase");
+        require(block.timestamp <= commitDeadline, "Commit phase ended");
 
+        for (uint i = 0; i < 2; i++) {
+            if (players[i].addr == msg.sender) {
+                require(!players[i].hasCommitted, "Already committed");
+                players[i].commitment = _commitment;
+                players[i].hasCommitted = true;
+            }
+        }
+
+        if (players[0].hasCommitted && players[1].hasCommitted) {
+            gameState = GameState.RevealPhase;
+        }
+    }
+
+    function revealMove(Move _move, string memory _salt) external {
+        require(gameState == GameState.RevealPhase, "Not reveal phase");
+        require(block.timestamp <= revealDeadline, "Reveal time over");
+
+        for (uint i = 0; i < 2; i++) {
+            if (players[i].addr == msg.sender) {
+                require(players[i].hasCommitted, "No commit");
+                require(!players[i].hasRevealed, "Already revealed");
+
+                bytes32 checkHash = keccak256(abi.encodePacked(_move, _salt));
+                require(players[i].commitment == checkHash, "Hash mismatch");
+
+                players[i].move = _move;
+                players[i].hasRevealed = true;
+
+                emit MoveRevealed(msg.sender, _move);
+
+                if (players[0].hasRevealed && players[1].hasRevealed) {
+                    decideWinner();
+                }
+            }
+        }
+    }
+
+    function decideWinner() internal {
+        require(gameState == GameState.RevealPhase, "Not in reveal phase");
+
+        Move m1 = players[0].move;
+        Move m2 = players[1].move;
+
+        if (m1 == m2) {
+            winner = address(0); // draw
+        } else if (
+            (m1 == Move.Rock && m2 == Move.Scissors) ||
+            (m1 == Move.Paper && m2 == Move.Rock) ||
+            (m1 == Move.Scissors && m2 == Move.Paper)
+        ) {
+            winner = players[0].addr;
+        } else {
+            winner = players[1].addr;
+        }
+
+        gameState = GameState.Finished;
+        emit WinnerDecided(winner);
+    }
+
+    function getWinner() external view returns (address) {
+        require(gameState == GameState.Finished, "Game not over yet");
+        return winner;
+    }
+}
