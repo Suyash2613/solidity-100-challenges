@@ -31,8 +31,6 @@ pragma solidity ^0.8.16 ;
 6. Code Example (Simplified)
 7. Summary in One Line
 
- Proxy → storage rakhta hai, Logic → code rakhta hai, ProxyAdmin → in dono ka boss hai jo decide karta hai ki Proxy kis Logic ko follow karega.
- Bhai ye teri final theory hai – ekdum notes-ready version.
- Chahta hai mai isko ek flow diagram bhi bana du jisme arrows se dikhau ki kaise Proxy → Logic → ProxyAdmin ka connection hota hai?
+ 
 
  */
