@@ -1,5 +1,3 @@
-bhai dekho hum log kya kr rhe the normal function me modifier lga ek check kr rhe hai ki bool stopped hai ya nhi hai 
-agr 
 
 
 
