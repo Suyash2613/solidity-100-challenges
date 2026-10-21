@@ -13,13 +13,10 @@ contract DeployProxy {
 
         // Step 2: Deploy TransparentUpgradeableProxy
         proxy = new TransparentUpgradeableProxy(
-            logic,               // Logic contract ka address
-            address(proxyAdmin), // ProxyAdmin contract ko hi admin banaya
-            data                 // Initialization data (abi.encodeWithSignature)
+            logic,               
+            address(proxyAdmin), 
+            data                
         );
     }
 }
- // ProxyAdmin public admin; 
-  // contract type, ek deployed ProxyAdmin ka address store karega
-  // TransparentUpgradeableProxy ek special tyoe ka upgrade contract ka address save krne ke liye
-  // bna rhe hai hum joki jis contrcat me upgrade krke call fowrward kr rhe hai delegatecall ko use krke usko store krta hai 
+ 
