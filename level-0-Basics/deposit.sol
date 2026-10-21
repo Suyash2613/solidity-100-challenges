@@ -1,7 +1,7 @@
 pragma solidity ^0.8.16;
  contract BankDeposit{
     
-// koi bhi maaping ho ya array ho vo ye nhi janti hai ki uska use kya hai jb tk usko hum khd se use nhi krvate hai.
+
 
     mapping(address => uint256) public sent;
 
